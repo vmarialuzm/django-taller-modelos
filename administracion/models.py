@@ -15,8 +15,26 @@ class Person(models.Model):
     class Meta:
         abstract = True
 
+#---------------------------------------------------
+
+class Teacher(Person):
+    salary = models.FloatField(default=0.0)
+    rating = models.FloatField(default=0.0)
+
+    class Meta:
+        db_table = "teachers"
+
+class TeacherProxy(Teacher):
+    class Meta:
+        proxy = True
+
+    def get_bonnus(self):
+        return self.salary + self.rating * 100
+
+#---------------------------------------------------
 
 class ClassRoom(models.Model):
+    teacher_id = models.ForeignKey(Teacher,on_delete=models.CASCADE,null=True, default=None)
     name = models.CharField(max_length=2)
     start_time = models.TimeField()
 
@@ -26,6 +44,7 @@ class ClassRoom(models.Model):
     class Meta:
         db_table = "classrooms"
 
+#---------------------------------------------------
 
 class Student(Person):
     classroom_id = models.ForeignKey(ClassRoom,on_delete=models.CASCADE)
@@ -46,19 +65,50 @@ class StudentProxy(Student):
       return self.grade_exam * 0.1 + self.grade_lab * 0.6 + self.grade_final * 0.3
 
 
+#------------------------Tarea---------------------------
 
-class Teacher(Person):
-    salary = models.FloatField(default=0.0)
-    rating = models.FloatField(default=0.0)
+class Evaluacion(models.Model):
+    hora_fecha = models.DateTimeField()
+    curso = models.CharField(max_length=30)
+    evaluador = models.CharField(max_length=50)
 
     class Meta:
-        db_table = "teachers"
+        abstract = True
 
-class TeacherProxy(Teacher):
+#---------------------------------------------------
+
+class ExamenFinal(Evaluacion):
+    duracion_exam = models.IntegerField()
+    num_preguntas = models.IntegerField()
+    puntaje_total = models.IntegerField()
+
+    def __str__(self):
+        return self.num_preguntas / self.puntaje_total
+
     class Meta:
+        db_table = "examen_final"
+
+#---------------------------------------------------
+
+class Proyecto(Evaluacion):
+    tema_proyecto = models.CharField(max_length=100)
+    num_grupos = models.IntegerField()
+
+    class Meta:
+        db_table = "proyecto"
+
+class ProyectoProxy(Proyecto):
+    class Meta:
+        ordering = ["tema_proyecto"]
         proxy = True
+        
+    
 
-    def get_bonnus(self):
-        return self.salary + self.rating * 100
+
+
+
+
+
+
     
     
